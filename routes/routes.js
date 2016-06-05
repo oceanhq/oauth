@@ -25,6 +25,12 @@ router.get('/authenticate', function(req, res, next) {
 });
 
 router.post('/authenticate', function(req, res) {
+  function authDisplayError(err, cb, res) {
+    var qs = querystring.stringify({ e: err, callback: cb });
+
+    res.redirect('/authenticate?'+qs);
+  }
+
   var cb = req.body.callback;
 
   if (!req.body.username) {
@@ -43,10 +49,9 @@ router.post('/authenticate', function(req, res) {
   res.redirect(redUrl);
 });
 
-function authDisplayError(err, cb, res) {
-  var qs = querystring.stringify({ e: err, callback: cb });
-
-  res.redirect('/authenticate?'+qs);
-}
+// We don't have a root path. Helpfully redirect people back to product.
+router.get('/', function(req, res) {
+  res.redirect(301, 'https://tryocean.com');
+});
 
 module.exports = router;
