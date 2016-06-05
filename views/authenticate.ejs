@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Ocean - Authenticate</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <% if (error) { %>
+      <p>Error: <%= error %></p>
+    <% } %>
+    <form method="post" action="/authenticate">
+      <input type="hidden" name="callback" value="<%= callback %>" />
+      <p>
+        <input type="text" name="username" placeholder="Username" />
+        <input type="submit" value="Sign In" />
+      </p>
+    </form>
+  </body>
+</html>
