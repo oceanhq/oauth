@@ -38,12 +38,12 @@ router.post('/authenticate', function(req, res) {
     return;
   }
 
-  var authToken = 'placeholder_auth_token';
+  var authCode = 'placeholder_auth_token';
 
   // Merge the callback URL with the token query param
   var cbUrl = url.parse(cb, true);
   // TODO: urljoin really sucks. Swap it out for a smarter URL builder if we need to do this for real auth.
-  var redUrl = urljoin(cbUrl.href, '?'+querystring.stringify({TOKEN: authToken}));
+  var redUrl = urljoin(cbUrl.href, '?'+querystring.stringify({CODE: authCode}));
 
   console.log(redUrl);
   res.redirect(redUrl);
