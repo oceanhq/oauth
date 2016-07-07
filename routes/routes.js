@@ -1,52 +1,65 @@
 'use strict'
 
 var express = require('express');
+const request = require('request');
 const querystring = require('querystring');
 const url = require('url');
 const urljoin = require('url-join')
 
 var router = express.Router();
 
-/* GET home page. */
+const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const CALLBACK_URL = process.env.CALLBACK_URL;
+
 router.get('/authenticate', function(req, res, next) {
-  var callback = null;
-  if (!req.query.callback) {
-    res.send('You must supply a callback URL.');
-    return;
-  }
-  callback = req.query.callback;
-
-  var err = null;
-  if (req.query.e){
-    err = req.query.e;
-  }
-
-  res.render('authenticate', {callback: callback, error: err});
+  res.render('authenticate', {client_id: CLIENT_ID});
 });
 
-router.post('/authenticate', function(req, res) {
-  function authDisplayError(err, cb, res) {
-    var qs = querystring.stringify({ e: err, callback: cb });
+function exchangeGithubTokenForCode(githubToken) {
+  return 'c9898e86af884ce7ac1b0c914816856b';
+}
 
-    res.redirect('/authenticate?'+qs);
-  }
+router.get('/callback', function(req, res) {
+  var code = req.query.code;
 
-  var cb = req.body.callback;
-
-  if (!req.body.username) {
-    authDisplayError('You must provide a username.', cb, res);
+  if(!code) {
+    res.send('Error: You must supply a code param.')
     return;
   }
 
-  var authCode = 'placeholder_auth_token';
+  request({
+    method: 'GET',
+    url: 'https://github.com/login/oauth/access_token',
+    json: {
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      code: code,
+      accept: 'json'
+    }
+  }, function(error, response, body) {
 
-  // Merge the callback URL with the token query param
-  var cbUrl = url.parse(cb, true);
-  // TODO: urljoin really sucks. Swap it out for a smarter URL builder if we need to do this for real auth.
-  var redUrl = urljoin(cbUrl.href, '?'+querystring.stringify({CODE: authCode}));
+    if(response.statusCode == 200) {
+      console.log("Body: "+JSON.stringify(body));
+    } else {
+      console.log("Error: "+response.statusCode);
+    }
 
-  console.log(redUrl);
-  res.redirect(redUrl);
+    var accessToken = body.access_token;
+
+    if(!accessToken) {
+      res.send('No access_token received from Github. Error: '+body.error_description);
+      return;
+    }
+
+    var code = exchangeGithubTokenForCode(accessToken);
+
+    res.send({
+      result: "CALLBACK!",
+      code: code,
+      accessToken: accessToken
+    });
+  });
 });
 
 // We don't have a root path. Helpfully redirect people back to product.

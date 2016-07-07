@@ -5,15 +5,6 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
-    <% if (error) { %>
-      <p>Error: <%= error %></p>
-    <% } %>
-    <form method="post" action="/authenticate">
-      <input type="hidden" name="callback" value="<%= callback %>" />
-      <p>
-        <input type="text" name="username" placeholder="Username" />
-        <input type="submit" value="Sign In" />
-      </p>
-    </form>
+    <a href="https://github.com/login/oauth/authorize?scope=user:email&client_id=<%= client_id %>">Connect with Github!</a></a>
   </body>
 </html>
