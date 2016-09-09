@@ -4,20 +4,26 @@ var express = require('express');
 const request = require('request');
 const querystring = require('querystring');
 const url = require('url');
-const urljoin = require('url-join')
+const urljoin = require('url-join');
+const crypto = require('crypto');
 
 var router = express.Router();
 
-const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const GH_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GH_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const CALLBACK_URL = process.env.CALLBACK_URL;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
 router.get('/authenticate', function(req, res, next) {
-  res.render('authenticate', {client_id: CLIENT_ID});
+  res.render('authenticate', {client_id: GH_CLIENT_ID});
 });
 
 function exchangeGithubTokenForCode(githubToken) {
-  return 'c9898e86af884ce7ac1b0c914816856b';
+  var cipher = crypto.createCipher('aes256', CLIENT_SECRET);
+  var encrypted = cipher.update(githubToken, 'hex', 'hex');
+  encrypted += cipher.final('hex');
+
+  return encrypted;
 }
 
 router.get('/callback', function(req, res) {
@@ -32,8 +38,8 @@ router.get('/callback', function(req, res) {
     method: 'GET',
     url: 'https://github.com/login/oauth/access_token',
     json: {
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
+      client_id: GH_CLIENT_ID,
+      client_secret: GH_CLIENT_SECRET,
       code: code,
       accept: 'json'
     }
@@ -59,6 +65,18 @@ router.get('/callback', function(req, res) {
       code: code,
       accessToken: accessToken
     });
+  });
+});
+
+router.post('/exchange', function(req, res) {
+  var encrypted = req.body.code;
+  var decipher = crypto.createDecipher('aes256', CLIENT_SECRET);
+
+
+  var githubToken = decipher.update(encrypted);
+
+  res.send({
+    token: githubToken
   });
 });
 
